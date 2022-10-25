@@ -190,11 +190,11 @@ class JobsScheduler():
             logger.warning('Scheduler has been shutdown')
             self.scheduler.shutdown()
         
-def q_job():
-    print('** Run job [1] **')
-    time.sleep(10)
-
 if __name__ == "__main__":
+
+    def example_job():
+        print('** Run example job**')
+        time.sleep(10)
 
     import random
 
@@ -207,7 +207,7 @@ if __name__ == "__main__":
     project_job_id = ''.join(random.sample('qwertyuiopasdfghjkl;zxcvbnm', 20))
 
     # add a interval job
-    scheduler.add_interval_job(job=q_job, id=project_job_id, seconds=10, exec_immediately=True)
+    scheduler.add_interval_job(job=example_job, id=project_job_id, seconds=10, exec_immediately=True)
     
     # list all jobs [dictionary]
     scheduler.list_jobs_dict()
