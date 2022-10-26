@@ -8,12 +8,15 @@ from pydantic import BaseModel
 from datetime import datetime
 from pydantic import BaseModel, validator
 
+
 DataT = TypeVar('DataT')
+
 
 # Status Message for API Response
 class StatusMessage(str, Enum):
    SUCCESS = 'SUCCESS'
    FAIL = 'FAIL'
+   
 
 # Scheduler Job Interval format
 class IntervalSetting(BaseModel):
@@ -57,6 +60,7 @@ class ScheduleJobOutput(BaseModel):
    interval: IntervalSetting
    activity_datetime: ActivityDateTime
 
+      
 # API Response Format
 class DataResponse(GenericModel, Generic[DataT]):
    status: int = 1
