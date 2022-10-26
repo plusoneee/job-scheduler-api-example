@@ -1,11 +1,9 @@
 from enum import Enum
-from typing import Generic, TypeVar, Optional
+from typing import Generic, TypeVar, Optional, Union
 from pydantic import BaseModel, root_validator
 from pydantic.generics import GenericModel
-from datetime import datetime
-from typing import Union, Optional
 from pydantic import BaseModel, validator
-
+from datetime import datetime
 
 DataT = TypeVar('DataT')
 
