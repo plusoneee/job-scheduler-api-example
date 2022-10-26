@@ -4,8 +4,6 @@ from pydantic import BaseModel, root_validator
 from pydantic.generics import GenericModel
 from datetime import datetime
 from typing import Union, Optional
-from pydantic import BaseModel
-from datetime import datetime
 from pydantic import BaseModel, validator
 
 
