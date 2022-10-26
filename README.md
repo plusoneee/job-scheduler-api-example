@@ -18,8 +18,8 @@ pip install SQLAlchemy
 ```
 uvicorn src.main:app --reload --port <YOUR_PORT>
 ```
-Once the application starts, you will see the terminal display:
+* Once the application starts, you will see the terminal display:
 ```
 INFO:  Uvicorn running on http://127.0.0.1:<YOUR_PORT> (Press CTRL+C to quit)
 ```
-* Vist the documentation via `http://127.0.0.1:<YOUR_PORT>/docs`.
+* Vist the API documentation via `http://127.0.0.1:<YOUR_PORT>/docs`.
