@@ -2,36 +2,36 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 from apscheduler.job import Job
-from apscheduler import triggers
-
+from apscheduler.triggers import interval, cron, date
 import time
 from datetime import datetime
 from pydantic import BaseModel
 from typing import List, Optional, Callable, Union
 from custom_logger import logger
 
-class JobModel(BaseModel):
-    id: str 
+class JobItem(BaseModel):
+    job_id: str
     name: str
     _func: Callable
-    args: Optional[Union[tuple, list]]
-    kwargs: Optional[dict]
-    coalesce: Optional[bool] = True
+    _args: Optional[Union[tuple, list]]
+    _kwargs: Optional[dict]
+    _coalesce: Optional[bool] = True
     trigger: str = 'interval'
     next_run_time: Union[datetime, str]
 
     def check_trigger(trigger):
-        if isinstance(trigger, triggers.interval.IntervalTrigger):
+        print(trigger)
+        if isinstance(trigger, interval.IntervalTrigger):
             return'interval'
-        elif isinstance(trigger, triggers.cron.CronTrigger):
+        elif isinstance(trigger, cron.CronTrigger):
             return 'cron'
-        elif isinstance(trigger, triggers.date.DateTrigger):
+        elif isinstance(trigger, date.DateTrigger):
             return 'date'
 
     def create(schedule_job: Job) -> dict:
-        trigger = JobModel.check_trigger(schedule_job.trigger)
-        job = JobModel(
-            id = schedule_job.id,
+        trigger = JobItem.check_trigger(schedule_job.trigger)
+        job = JobItem(
+            job_id = schedule_job.id,
             name = schedule_job.name,
             func = schedule_job.func,
             args = schedule_job.args,
@@ -40,7 +40,6 @@ class JobModel(BaseModel):
             coalesce = schedule_job.coalesce,
             next_run_time = schedule_job.next_run_time.strftime("%Y-%m-%d %H:%M:%S")
         )
-
         return job.dict()
         
 class JobsScheduler():
@@ -91,24 +90,26 @@ class JobsScheduler():
     def add_date_job(
         self,
         job: Callable,
-        id: str,
+        job_id: str,
         start_date: Union[datetime, str],
         args: Union[tuple, list] = None,
         kwargs: dict = None
         ):
+        
         self.scheduler.add_job(
             job,
-            id=id,
+            id=job_id,
             trigger='date',
             run_date=start_date,
             args=args,
-            kwargs=kwargs
+            kwargs=kwargs,
+            replace_existing=True
         )
 
     def add_interval_job(
         self,
         job: Callable, 
-        id: str, 
+        job_id: str, 
         start_date: Union[datetime, str] = None, 
         end_date: Union[datetime, str] = None,
         weeks: int = 0,
@@ -117,20 +118,20 @@ class JobsScheduler():
         minutes: int = 0,
         seconds: int = 0,
         exec_immediately: bool = False,
+        jitter: int = 200,
         args: tuple = None,
         kwargs: dict = None
         ):
-
+        
         if exec_immediately:
             logger.info('Run Job Immdiately')
             now = datetime.now()
-            self.add_date_job(job, id=id, start_date=now)
+            self.add_date_job(job, job_id=job_id, args=args, start_date=now)
 
-        logger.debug('Add Interval Job')
         job = self.scheduler.add_job(
             job, 
             'interval', 
-            id=id, 
+            id=job_id,
             weeks=weeks,
             days=days,
             hours=hours,
@@ -140,9 +141,12 @@ class JobsScheduler():
             end_date=end_date,
             replace_existing=True,
             args=args,
-            kwargs=kwargs
+            kwargs=kwargs,
+            jitter=jitter
             )
         
+        return JobItem.create(job)
+
     def show_jobs(self):
         self.scheduler.print_jobs()
 
@@ -154,19 +158,23 @@ class JobsScheduler():
         return self.jobstore.get_all_jobs()
 
     def job_to_dictionary(self, job: Job) -> dict:
-        return JobModel.create(job)
+        return JobItem.create(job)
+
+    def get_job(self, job_id):
+        job = self.scheduler.get_job(job_id=job_id)
+        return JobItem.create(job)
 
     @check_job
-    def remove_job(self, id):
-        self.scheduler.remove_job(id)
+    def remove_job(self, job_id):
+        self.scheduler.remove_job(job_id=job_id)
 
     @check_job
-    def pause_job(self, id):
-        self.scheduler.pause_job(job_id=id)
+    def pause_job(self, job_id):
+        self.scheduler.pause_job(job_id=job_id)
     
     @check_job
-    def resume_job(self, id):
-        self.scheduler.resume_job(job_id=id)
+    def resume_job(self, job_id):
+        self.scheduler.resume_job(job_id=job_id)
     
     def restart(self):
         if not self.scheduler.running:
@@ -182,8 +190,8 @@ class JobsScheduler():
     
     def shutdown(self):
         if self.scheduler.running:
-            logger.warning('Scheduler prepare to shutdown.')
-            logger.warning('Pause all jobs before shutdown')
+            logger.warning('Scheduler prepare to shutdown. Pause all jobs before shutdown ...')
+            
             for job in self.list_jobs():
                 self.pause_job(job.id)
 
@@ -207,7 +215,7 @@ if __name__ == "__main__":
     project_job_id = ''.join(random.sample('qwertyuiopasdfghjkl;zxcvbnm', 20))
 
     # add a interval job
-    scheduler.add_interval_job(job=example_job, id=project_job_id, seconds=10, exec_immediately=True)
+    scheduler.add_interval_job(job=example_job, job_id=project_job_id, seconds=10, exec_immediately=True)
     
     # list all jobs [dictionary]
     scheduler.list_jobs_dict()
