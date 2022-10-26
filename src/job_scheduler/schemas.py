@@ -23,12 +23,12 @@ class IntervalSetting(BaseModel):
    minutes: int = 0
    seconds: int = 0
    
-   # @root_validator(pre=True)
-   # def at_least_one_hours(cls, values):
-   #    if values['weeks'] + values['days'] + values['hours'] == 0:
-   #       if values['seconds'] + (values['minutes']) * 60 < 1800:
-   #          raise ValueError('Interval time at least 30 minutes.')
-   #    return values
+   @root_validator(pre=True)
+   def at_least_one_hours(cls, values):
+      if values['weeks'] + values['days'] + values['hours'] == 0:
+         if values['seconds'] + (values['minutes']) * 60 < 1800:
+            raise ValueError('Interval time at least 30 minutes.')
+      return values
 
 
 # Scheduler Job Activity DateTime
