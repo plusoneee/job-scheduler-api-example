@@ -81,7 +81,7 @@ class JobsScheduler():
                 job_defaults=self.job_defaults, 
                 timezone=JobsScheduler.timezone
             )
-        self.start()
+        self.scheduler.start()
     
     def check_job_exist(func: Callable) -> Union[None, Callable]:
         logger.debug(f'Run Function: {func.__name__}')
