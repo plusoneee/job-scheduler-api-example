@@ -188,19 +188,19 @@ class JobsScheduler():
         self.scheduler.remove_all_jobs()
     
     def restart(self) -> None:
-        if not self.scheduler.running:
+        if self.scheduler.state == 0:
             logger.info('Scheduler is not running, Restart it now.')
             self.scheduler.start(paused=True)
             for job in self.list_jobs():
                 self.resume_job(job.id)
 
     def start(self) -> None:
-        if not self.scheduler.state == 0:
+        if self.scheduler.state == 0:
             logger.info('Scheduler is not running, Start it now.')
             self.scheduler.start()
     
     def shutdown(self) -> None:
-        if self.scheduler.running:
+        if not self.scheduler.state == 0:
             logger.warning('Scheduler prepare to shutdown. Pause all jobs before shutdown ...')
             
             for job in self.list_jobs():
