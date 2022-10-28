@@ -5,7 +5,11 @@ from .tasks.example_task import ANY_PROJECT_TASK_DICTIONARY
 import random
 
 router = APIRouter()
-scheduler = JobsScheduler()
+
+@router.on_event("startup")
+async def startup():
+    global scheduler 
+    scheduler = JobsScheduler()
 
 def create_serial_number():
     return  ''.join(random.sample('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 20))
