@@ -195,7 +195,7 @@ class JobsScheduler():
                 self.resume_job(job.id)
 
     def start(self) -> None:
-        if not self.scheduler.running:
+        if not self.scheduler.state == 0:
             logger.info('Scheduler is not running, Start it now.')
             self.scheduler.start()
     
