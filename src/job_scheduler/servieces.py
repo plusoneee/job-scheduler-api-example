@@ -8,6 +8,9 @@ from datetime import datetime
 from pydantic import BaseModel, validator
 from typing import List, Optional, Callable, Union
 from .custom_logger import logger
+from .config import get_settings
+
+SETTINGS = get_settings()
 
 
 class TriggerType(str, Enum):
@@ -35,8 +38,8 @@ class JobItem(BaseModel):
         elif isinstance(value, date.DateTrigger):
             return TriggerType.DATE
 
-    def job_to_response(schedule_job: Job) -> dict:
-        job = JobItem(
+    def dict_from_job(schedule_job: Job) -> dict:
+        jobitem = JobItem(
             job_id = schedule_job.id,
             name = schedule_job.name,
             func = schedule_job.func,
@@ -46,19 +49,20 @@ class JobItem(BaseModel):
             coalesce = schedule_job.coalesce,
             next_run_time = schedule_job.next_run_time.strftime("%Y-%m-%d %H:%M:%S")
         )
-        return job.dict()
+        return jobitem.dict()
     
         
 class JobsScheduler():
-    db: str = 'sqlite:///event_scheduler.db'
-    thread_num: int = 10
-    process_num: int = 10
-    max_instances: int = 20
-    timezone: str = "Asia/Taipei"
-
+    db: str = SETTINGS.db_url
+    table: str = SETTINGS.db_table
+    thread_num: int = SETTINGS.exec_thread_num
+    process_num: int = SETTINGS.exec_process_num
+    max_instances: int = SETTINGS.exec_max_instances
+    timezone: str =  SETTINGS.timezone
+    
     @property
     def jobstore(self):
-        return SQLAlchemyJobStore(url=JobsScheduler.db, tablename=self.project_name)
+        return SQLAlchemyJobStore(url=JobsScheduler.db, tablename=JobsScheduler.table)
 
     @property
     def executors(self):
@@ -72,7 +76,6 @@ class JobsScheduler():
         return {'coalesce': False, 'max_instances': JobsScheduler.max_instances}
 
     def __init__(self):
-        self.project_name: str ='apscheduler_jobs' 
         self.scheduler = BackgroundScheduler(
                 jobstores= {
                     'default': self.jobstore
@@ -112,7 +115,7 @@ class JobsScheduler():
             kwargs=kwargs,
             replace_existing=True)
         
-        return JobItem.job_to_response(job)
+        return JobItem.dict_from_job(job)
 
     def add_interval_job(
         self,
@@ -149,17 +152,17 @@ class JobsScheduler():
             kwargs=kwargs,
             jitter=jitter)
 
-        return JobItem.job_to_response(job)
+        return JobItem.dict_from_job(job)
 
     def show_jobs(self) -> None:
         self.scheduler.print_jobs()
 
     def job_to_dictionary(self, job: Job) -> dict:
-        return JobItem.job_to_response(job)
+        return JobItem.dict_from_job(job)
 
     def get_job(self, job_id) -> dict:
         job = self.scheduler.get_job(job_id=job_id)
-        return JobItem.job_to_response(job)
+        return JobItem.dict_from_job(job)
 
     def list_jobs_dict(self) -> List[dict]:
         jobs = self.jobstore.get_all_jobs()
@@ -211,7 +214,7 @@ class JobsScheduler():
 
 
 if __name__ == "__main__":
-
+    
     import random
     
     def example_job():
