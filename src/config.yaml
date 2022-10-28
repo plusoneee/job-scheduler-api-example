@@ -1,0 +1,10 @@
+db: 
+    url: sqlite:///event_scheduler.db
+    table: apscheduler_jobs
+    timezone:  Asia/Taipei
+executor:
+    thread_num: 10
+    process_num: 10
+    max_instances: 10
+app:
+    port: 8045
