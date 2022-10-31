@@ -1,0 +1,11 @@
+db: 
+    name: <YOUR_DATABASE_NAME>
+    url: <YOUR_DATABASE_URL>
+    user: <YOUR_DATABASE_USER_NAME>
+    password: <YOUR_DATABASE_USER_PASSWORD>
+    table: scheduler_jobs
+    timezone:  Asia/Taipei
+executor:
+    thread_num: 10
+    process_num: 10
+    max_instances: 10
