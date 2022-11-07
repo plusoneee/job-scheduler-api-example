@@ -2,6 +2,7 @@ from enum import Enum
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+from apscheduler.events import EVENT_JOB_REMOVED, EVENT_JOB_EXECUTED, EVENT_JOB_ERROR
 from apscheduler.job import Job
 from apscheduler.triggers import interval, cron, date
 from datetime import datetime
@@ -211,8 +212,26 @@ class JobsScheduler():
 
             logger.warning('Scheduler has been shutdown')
             self.scheduler.shutdown()
+            
+    def add_event_listener(self, callback, mask):
+        self.scheduler.add_listener(callback, mask)
+           
+class JobEventCallback:
+    
+    @staticmethod
+    def _remove(event):
+        print(f'Remove Job: [{ event.job_id}]')
 
-
+    @staticmethod
+    def _execute(event):
+        if event.exception is None:
+            function_return_value = event.retval
+            print(f'Execute Job:[{event.job_id}] successfully @{event.scheduled_run_time}')
+            print(function_return_value)
+        else:
+            print(f'Exception: {event.exception}')
+            
+            
 if __name__ == "__main__":
     
     import random
@@ -222,7 +241,11 @@ if __name__ == "__main__":
 
     # create scheduler instance
     scheduler = JobsScheduler()
-
+    
+    # add listener
+    scheduler.add_event_listener(JobEventCallback._remove, EVENT_JOB_REMOVED)
+    scheduler.add_event_listener(JobEventCallback._execute, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR)
+    
     # show (print) all jobs
     scheduler.show_jobs()
     
