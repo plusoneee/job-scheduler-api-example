@@ -163,7 +163,8 @@ class JobsScheduler():
 
     def get_job(self, job_id) -> dict:
         job = self.scheduler.get_job(job_id=job_id)
-        return JobItem.dict_from_job(job)
+        if not job is None:
+            return JobItem.job_to_response(job)
 
     def list_jobs_dict(self) -> List[dict]:
         jobs = self.jobstore.get_all_jobs()
