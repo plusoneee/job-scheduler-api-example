@@ -1,11 +1,14 @@
 # Byte-compiled / optimized / DLL files
+.vscode/
 __pycache__/
 *.py[cod]
 *$py.class
-
+*alembic.ini
+*/alembic/
+*.DS_Store
 # C extensions
 *.so
-
+*/.env
 # Distribution / packaging
 .Python
 build/
